@@ -1,0 +1,45 @@
+[flake8]
+exclude = 
+    venv,
+    __pycache__,
+    build,
+    dist,
+    .git,
+    .github,
+    .gitignore,
+    .env,
+    .env.*,
+    *.pyc,
+    *.pyo,
+    *.pyd,
+    .Python,
+    env,
+    pip-log.txt,
+    pip-delete-this-directory.txt,
+    .tox,
+    .coverage,
+    .coverage.*,
+    .cache,
+    nosetests.xml,
+    coverage.xml,
+    *.cover,
+    *.log,
+    .pytest_cache,
+    .mypy_cache,
+    .ruff_cache,
+    .hypothesis,
+    .eggs,
+    *.egg-info,
+    *.egg,
+    MANIFEST,
+    .DS_Store,
+    .idea,
+    .vscode,
+    *.swp,
+    *.swo,
+    *~
+
+max-line-length = 127
+max-complexity = 10
+select = E9,F63,F7,F82
+ignore = E203,W503 
