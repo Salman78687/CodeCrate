@@ -33,6 +33,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv,__pycache__,build,dist,.git
         
     - name: Upload coverage to Codecov
+      if: github.event_name != 'pull_request'
       uses: codecov/codecov-action@v3
       continue-on-error: true
       with:
