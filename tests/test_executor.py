@@ -1,5 +1,5 @@
 import pytest
-from executor import run_code, check_docker_availability
+from codecrate import run_code, check_docker_availability
 
 def test_docker_availability():
     """Test if Docker daemon is accessible."""
