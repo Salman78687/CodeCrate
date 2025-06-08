@@ -10,6 +10,8 @@ from typing import Optional, Dict, Any
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+print("CI/CD test change")
+
 # Create FastAPI app with metadata
 app = FastAPI(
     title="Code Execution API",
