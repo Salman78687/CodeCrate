@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Executor Test UI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+            --error: #ef4444;
+            --code-bg: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: var(--bg-card);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        h1::before {
+            content: "⚡";
+            font-size: 1.8rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.5s ease-out;
+            animation-delay: 0.2s;
+            animation-fill-mode: both;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .form-group:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .form-group:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            background-color: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            resize: vertical;
+            transition: all 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background-color: var(--border);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        button:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+
+        .output {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            white-space: pre-wrap;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-color: var(--error);
+            color: var(--error);
+            animation: errorShake 0.5s ease-out;
+        }
+
+        .success {
+            background-color: rgba(34, 197, 94, 0.1);
+            border-color: var(--success);
+            color: var(--success);
+            animation: successPulse 0.5s ease-out;
+        }
+
+        .stats {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: var(--bg-dark);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .stats h3 {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats p {
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stats p:last-child {
+            margin-bottom: 0;
+        }
+
+        .language-usage {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .language-stat {
+            background-color: var(--bg-card);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            animation: fadeIn 0.3s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .language-stat:nth-child(1) { animation-delay: 0.1s; }
+        .language-stat:nth-child(2) { animation-delay: 0.2s; }
+        .language-stat:nth-child(3) { animation-delay: 0.3s; }
+        .language-stat:nth-child(4) { animation-delay: 0.4s; }
+        .language-stat:nth-child(5) { animation-delay: 0.5s; }
+
+        .language-stat span {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .container {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Animation Keyframes */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        /* Success/Error Animations */
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Stats Counter Animation */
+        .stats p span {
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .stats p span:hover {
+            transform: scale(1.1);
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CodeCrate</h1>
+        <div class="subtitle">Containerized Code Run. Instant Output</div>
+        
+        <div class="form-group">
+            <label for="language">Programming Language</label>
+            <select id="language">
+                <option value="py">Python</option>
+                <option value="js">JavaScript</option>
+                <option value="cpp">C++</option>
+                <option value="java">Java</option>
+                <option value="go">Go</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="code">Code Editor</label>
+            <textarea id="code" placeholder="Enter your code here...">print("Hello, World!")</textarea>
+        </div>
+        
+        <button id="executeBtn" onclick="executeCode()">
+            <span>▶</span>
+            Execute Code
+        </button>
+        
+        <div id="output"></div>
+        
+        <div class="stats">
+            <h3>Execution Statistics</h3>
+            <div id="metrics">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+        // Set default code examples for each language
+        const codeExamples = {
+            'py': 'print("Hello from Python!")\nprint("2 + 2 =", 2 + 2)',
+            'js': 'console.log("Hello from JavaScript!");\nconsole.log("2 + 2 =", 2 + 2);',
+            'cpp': '#include <iostream>\n\nint main() {\n    std::cout << "Hello from C++!" << std::endl;\n    std::cout << "2 + 2 = " << 2 + 2 << std::endl;\n    return 0;\n}',
+            'java': 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello from Java!");\n        System.out.println("2 + 2 = " + (2 + 2));\n    }\n}',
+            'go': 'package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello from Go!")\n    fmt.Println("2 + 2 =", 2 + 2)\n}'
+        };
+
+        // Update code when language changes
+        document.getElementById('language').addEventListener('change', function() {
+            const lang = this.value;
+            const textarea = document.getElementById('code');
+            textarea.style.opacity = '0.5';
+            setTimeout(() => {
+                textarea.value = codeExamples[lang];
+                textarea.style.opacity = '1';
+            }, 200);
+        });
+
+        async function executeCode() {
+            const language = document.getElementById('language').value;
+            const code = document.getElementById('code').value;
+            const outputDiv = document.getElementById('output');
+            const button = document.getElementById('executeBtn');
+            
+            // Enhanced loading state
+            button.disabled = true;
+            button.innerHTML = '<span class="loading"></span>Executing...';
+            outputDiv.innerHTML = '<div class="output">Executing...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ language, code })
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    outputDiv.innerHTML = `
+                        <div class="output error">
+                            <strong>Error:</strong><br>
+                            ${escapeHtml(result.error)}
+                            <br><br>
+                            <small>Exit Code: ${result.exitCode} | Time: ${result.executionTime.toFixed(3)}s</small>
+                        </div>
+                    `;
+                } else {
+                    outputDiv.innerHTML = `
+                        <div class="output success">
+                            <strong>Output:</strong><br>
+                            ${escapeHtml(result.output || '(No output)')}
+                            ${result.stderr ? '<br><br><strong>Stderr:</strong><br>' + escapeHtml(result.stderr) : ''}
+                            <br><br>
+                            <small>Exit Code: ${result.exitCode} | Time: ${result.executionTime.toFixed(3)}s</small>
+                        </div>
+                    `;
+                }
+                
+                // Refresh metrics with animation
+                loadMetrics();
+                
+            } catch (error) {
+                outputDiv.innerHTML = `
+                    <div class="output error">
+                        <strong>Request Failed:</strong><br>
+                        ${escapeHtml(error.message)}
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<span>▶</span>Execute Code';
+            }
+        }
+
+        // Enhanced metrics loading with animations
+        async function loadMetrics() {
+            const metricsDiv = document.getElementById('metrics');
+            metricsDiv.style.opacity = '0.5';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/metrics');
+                const metrics = await response.json();
+                
+                const languageUsage = metrics.language_usage;
+                const languageStats = Object.entries(languageUsage)
+                    .map(([lang, count]) => `
+                        <div class="language-stat">
+                            <span>${count}</span>
+                            ${lang.toUpperCase()}
+                        </div>
+                    `).join('');
+                
+                metricsDiv.innerHTML = `
+                    <p>Total Executions <span>${metrics.total_executions}</span></p>
+                    <p>Successful <span>${metrics.successful_executions}</span></p>
+                    <p>Failed <span>${metrics.failed_executions}</span></p>
+                    <div class="language-usage">
+                        ${languageStats}
+                    </div>
+                `;
+                
+                // Fade in the new metrics
+                metricsDiv.style.opacity = '1';
+                metricsDiv.style.transition = 'opacity 0.3s ease';
+                
+            } catch (error) {
+                metricsDiv.innerHTML = 'Failed to load metrics';
+                metricsDiv.style.opacity = '1';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load metrics on page load
+        loadMetrics();
+    </script>
+</body>
+</html> 
