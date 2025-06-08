@@ -12,6 +12,7 @@ permissions:
   security-events: write
   actions: read
   contents: read
+  packages: read
 
 jobs:
   trivy:
@@ -19,6 +20,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
