@@ -47,6 +47,15 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
+          mkdir -p /home/ubuntu/code-executor
           cd /home/ubuntu/code-executor
+          echo "version: '3.8'
+          services:
+            app:
+              image: ghcr.io/salman78687/codecrate:latest
+              ports:
+                - '8000:8000'
+              environment:
+                - PORT=8000" > docker-compose.yml
           docker-compose pull
           docker-compose up -d 
