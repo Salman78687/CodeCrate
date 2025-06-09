@@ -78,7 +78,7 @@ def run_code(language: str, code: str) -> Dict[str, Any]:
     # Ensure image exists
     if not ensure_image_exists(image):
         return {"error": f"Failed to pull Docker image: {image}", "exitCode": -1}
-    
+
     # Build docker command
     docker_cmd = [
         "docker", "run", "--rm",
