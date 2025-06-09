@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Container, Box, Paper, Typography, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
@@ -129,7 +129,7 @@ const languages = [
 ];
 
 // API configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://3.92.61.41:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 function App() {
   const [code, setCode] = useState(defaultCodeSnippets.py);
@@ -138,6 +138,21 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [apiStatus, setApiStatus] = useState('checking');
+
+  // Check API availability on component mount
+  useEffect(() => {
+    const checkApiStatus = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/health`);
+        setApiStatus(response.data.status === 'healthy' ? 'available' : 'unhealthy');
+      } catch (error) {
+        setApiStatus('unavailable');
+        console.error('API health check failed:', error);
+      }
+    };
+    checkApiStatus();
+  }, []);
 
   const handleLanguageChange = (newLanguage) => {
     setLanguage(newLanguage);
@@ -145,6 +160,11 @@ function App() {
   };
 
   const handleExecute = async () => {
+    if (apiStatus !== 'available') {
+      toast.error('API is not available. Please check your connection.');
+      return;
+    }
+
     setIsLoading(true);
     setIsError(false);
     setIsSuccess(false);
@@ -156,7 +176,8 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
-        }
+        },
+        timeout: 30000 // 30 second timeout
       });
 
       if (response.data.error) {
@@ -170,7 +191,10 @@ function App() {
       }
     } catch (error) {
       console.error('Execution error:', error);
-      setOutput(error.response?.data?.detail || 'Failed to execute code. Please check if the backend server is running.');
+      const errorMessage = error.response?.data?.detail || 
+                          error.message || 
+                          'Failed to execute code. Please check if the backend server is running.';
+      setOutput(errorMessage);
       setIsError(true);
       toast.error('Error executing code');
     }
