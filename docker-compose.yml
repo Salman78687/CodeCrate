@@ -72,6 +72,16 @@ services:
     networks:
       - code-executor-network
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
 volumes:
   prometheus-data:
     driver: local

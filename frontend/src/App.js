@@ -128,6 +128,9 @@ const languages = [
   { id: 'go', name: 'Go' }
 ];
 
+// API configuration
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://3.92.61.41:8000';
+
 function App() {
   const [code, setCode] = useState(defaultCodeSnippets.py);
   const [language, setLanguage] = useState('py');
@@ -146,7 +149,7 @@ function App() {
     setIsError(false);
     setIsSuccess(false);
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/execute', {
+      const response = await axios.post(`${API_BASE_URL}/api/v1/execute`, {
         language,
         code
       }, {
