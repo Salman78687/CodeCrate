@@ -56,6 +56,10 @@ jobs:
               ports:
                 - '8000:8000'
               environment:
-                - PORT=8000" > docker-compose.yml
+                - PORT=8000
+              restart: always
+              volumes:
+                - /home/ubuntu/code-executor/data:/app/data" > docker-compose.yml
           docker-compose pull
+          docker-compose down
           docker-compose up -d 
