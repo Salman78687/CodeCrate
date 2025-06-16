@@ -41,10 +41,16 @@ SUPPORTED_LANGUAGES = {
 
 # Docker client configuration
 try:
-    client = docker.DockerClient(base_url='unix://var/run/docker.sock')
-    # Test the connection
-    client.ping()
-    logger.info("Successfully connected to Docker daemon")
+    # Try TCP first, fall back to socket
+    try:
+        client = docker.DockerClient(base_url='tcp://host.docker.internal:2375')
+        client.ping()
+        logger.info("Successfully connected to Docker daemon via TCP")
+    except Exception as tcp_error:
+        logger.warning(f"TCP connection failed: {str(tcp_error)}, trying socket...")
+        client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+        client.ping()
+        logger.info("Successfully connected to Docker daemon via socket")
 except Exception as e:
     logger.error(f"Failed to connect to Docker daemon: {str(e)}")
     client = None
