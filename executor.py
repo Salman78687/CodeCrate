@@ -28,8 +28,8 @@ SUPPORTED_LANGUAGES = {
         "timeout": 30
     },
     "cpp": {
-        "image": "gcc:latest",
-        "command": ["./a.out"],
+        "image": "gcc:11.2",
+        "command": ["bash", "-c", "g++ /app/code.cpp -o /app/a.out && /app/a.out"],
         "timeout": 30
     },
     "go": {
