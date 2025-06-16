@@ -16,21 +16,29 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/CodeCrate
+            # Ensure Docker daemon is running
+            sudo systemctl start docker
+            sudo systemctl status docker
+            # Add current user to docker group if not already added
+            sudo usermod -aG docker $USER
+            # Debug: Show Docker info
+            echo "Checking Docker status..."
+            docker info
             # Debug: Show what's using port 8000
             echo "Checking processes using port 8000..."
             sudo lsof -i :8000 || true
             # Stop all running containers
-            docker-compose down
+            docker-compose down || true
             # Kill any process using port 8000 (more aggressive)
             sudo fuser -k 8000/tcp || true
             # Additional cleanup for Docker
-            docker system prune -f
+            docker system prune -f || true
             # Remove all containers
             docker rm -f $(docker ps -aq) || true
             # Remove all networks
-            docker network prune -f
+            docker network prune -f || true
             # Remove all volumes
-            docker volume prune -f
+            docker volume prune -f || true
             # Clean up prometheus directory
             sudo rm -rf prometheus
             mkdir -p prometheus
@@ -61,9 +69,17 @@ jobs:
             sudo netstat -tulpn | grep :8000 || true
             # Kill any remaining processes on port 8000
             sudo kill -9 $(sudo lsof -t -i:8000) 2>/dev/null || true
-            # Build and start services
-            docker-compose build
-            docker-compose up -d
+            # Build and start services with error handling
+            echo "Building Docker images..."
+            docker-compose build || { echo "Docker build failed"; exit 1; }
+            echo "Starting Docker containers..."
+            docker-compose up -d || { echo "Docker compose up failed"; exit 1; }
             # Debug: Show running containers
             echo "Checking running containers..."
-            docker ps 
+            docker ps
+            # Verify services are running
+            echo "Verifying services..."
+            docker-compose ps
+            # Check Docker logs
+            echo "Checking Docker logs..."
+            docker-compose logs 
