@@ -7,8 +7,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import { styled } from '@mui/material/styles';
-import { RtlProvider } from './components/RtlProvider';
-import { DefaultPropsProvider } from './components/DefaultPropsProvider';
 
 const darkTheme = createTheme({
   palette: {
