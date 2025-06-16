@@ -30,7 +30,7 @@ COPY main.py executor.py /app/
 RUN mkdir -p /code
 
 # Create non-root user and add to docker group
-RUN groupadd -g 999 docker || true && \
+RUN groupadd -g 113 docker || true && \
     useradd -m -u 1000 appuser && \
     usermod -aG docker appuser && \
     chown -R appuser:appuser /app /code
