@@ -7,6 +7,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import { styled } from '@mui/material/styles';
+import { RtlProvider } from './components/RtlProvider';
+import { DefaultPropsProvider } from './components/DefaultPropsProvider';
 
 const darkTheme = createTheme({
   palette: {
@@ -88,20 +90,6 @@ const StyledFormControl = styled(FormControl)(({ theme }) => ({
       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
     },
   },
-}));
-
-const OutputBox = styled(Box)(({ theme, error, success }) => ({
-  marginTop: '1.5rem',
-  padding: '1rem',
-  backgroundColor: theme.palette.background.default,
-  border: `1px solid ${error ? '#ef4444' : success ? '#22c55e' : theme.palette.divider}`,
-  borderRadius: '0.5rem',
-  whiteSpace: 'pre-wrap',
-  fontFamily: '"JetBrains Mono", monospace',
-  fontSize: '0.9rem',
-  lineHeight: 1.6,
-  animation: error ? 'errorShake 0.5s ease-out' : success ? 'successPulse 0.5s ease-out' : 'fadeIn 0.3s ease-out',
-  color: error ? '#ef4444' : success ? '#22c55e' : theme.palette.text.primary,
 }));
 
 const defaultCodeSnippets = {
