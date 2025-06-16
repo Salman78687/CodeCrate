@@ -177,7 +177,7 @@ function App() {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        timeout: 30000 // 30 second timeout
+        timeout: 120000  // Increased timeout to 2 minutes
       });
 
       if (response.data.error) {
@@ -255,9 +255,23 @@ function App() {
             {isLoading ? 'Executing...' : 'Run Code'}
           </Button>
 
-          <OutputBox error={isError} success={isSuccess}>
+          <Box
+            sx={{
+              mt: 2,
+              p: 2,
+              bgcolor: 'background.paper',
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2
+            }}
+            success={isSuccess ? "true" : undefined}
+            error={isError ? "true" : undefined}
+          >
             {output || 'No output yet'}
-          </OutputBox>
+          </Box>
 
           <Box sx={{ mt: 4 }}>
             <Typography variant="h3" gutterBottom>
