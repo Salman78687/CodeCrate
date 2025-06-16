@@ -23,20 +23,35 @@ jobs:
             echo "Docker Installation:"
             which docker
             docker --version
-            # Debug: Show Docker service status
-            echo "Docker Service Status:"
-            sudo systemctl status docker || true
-            # Debug: Show Docker logs
-            echo "Docker Service Logs:"
-            sudo journalctl -u docker --no-pager -n 50 || true
             # Stop Docker service
             echo "Stopping Docker service..."
             sudo systemctl stop docker
             # Remove Docker socket if it exists
             echo "Removing Docker socket..."
             sudo rm -f /var/run/docker.sock
-            # Start Docker service
-            echo "Starting Docker service..."
+            # Configure Docker daemon
+            echo "Configuring Docker daemon..."
+            sudo mkdir -p /etc/docker
+            sudo tee /etc/docker/daemon.json << EOF
+            {
+              "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2375"],
+              "log-driver": "json-file",
+              "log-opts": {
+                "max-size": "100m",
+                "max-file": "3"
+              }
+            }
+            EOF
+            # Update Docker service configuration
+            echo "Updating Docker service configuration..."
+            sudo tee /etc/systemd/system/docker.service.d/override.conf << EOF
+            [Service]
+            ExecStart=
+            ExecStart=/usr/bin/dockerd
+            EOF
+            # Reload systemd and restart Docker
+            echo "Reloading systemd and restarting Docker..."
+            sudo systemctl daemon-reload
             sudo systemctl start docker
             # Wait for Docker to be ready
             echo "Waiting for Docker to be ready..."
