@@ -16,30 +16,62 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/CodeCrate
-            # Ensure Docker daemon is running
+            # Debug: Show system information
+            echo "System Information:"
+            uname -a
+            # Debug: Show Docker installation
+            echo "Docker Installation:"
+            which docker
+            docker --version
+            # Debug: Show Docker service status
+            echo "Docker Service Status:"
+            sudo systemctl status docker || true
+            # Debug: Show Docker logs
+            echo "Docker Service Logs:"
+            sudo journalctl -u docker --no-pager -n 50 || true
+            # Stop Docker service
+            echo "Stopping Docker service..."
+            sudo systemctl stop docker
+            # Remove Docker socket if it exists
+            echo "Removing Docker socket..."
+            sudo rm -f /var/run/docker.sock
+            # Start Docker service
+            echo "Starting Docker service..."
             sudo systemctl start docker
-            sudo systemctl status docker
-            # Add current user to docker group if not already added
-            sudo usermod -aG docker $USER
+            # Wait for Docker to be ready
+            echo "Waiting for Docker to be ready..."
+            timeout=30
+            while ! sudo docker info > /dev/null 2>&1; do
+              if [ $timeout -le 0 ]; then
+                echo "Timeout waiting for Docker to start"
+                exit 1
+              fi
+              timeout=$((timeout-1))
+              sleep 1
+            done
             # Debug: Show Docker info
-            echo "Checking Docker status..."
-            docker info
+            echo "Docker Info:"
+            sudo docker info
+            # Add current user to docker group
+            echo "Adding user to docker group..."
+            sudo usermod -aG docker $USER
             # Debug: Show what's using port 8000
             echo "Checking processes using port 8000..."
             sudo lsof -i :8000 || true
             # Stop all running containers
-            docker-compose down || true
-            # Kill any process using port 8000 (more aggressive)
+            echo "Stopping containers..."
+            sudo docker-compose down || true
+            # Kill any process using port 8000
+            echo "Killing processes on port 8000..."
             sudo fuser -k 8000/tcp || true
-            # Additional cleanup for Docker
-            docker system prune -f || true
-            # Remove all containers
-            docker rm -f $(docker ps -aq) || true
-            # Remove all networks
-            docker network prune -f || true
-            # Remove all volumes
-            docker volume prune -f || true
+            # Clean up Docker
+            echo "Cleaning up Docker..."
+            sudo docker system prune -f || true
+            sudo docker rm -f $(sudo docker ps -aq) 2>/dev/null || true
+            sudo docker network prune -f || true
+            sudo docker volume prune -f || true
             # Clean up prometheus directory
+            echo "Setting up Prometheus..."
             sudo rm -rf prometheus
             mkdir -p prometheus
             # Create prometheus config
@@ -61,25 +93,16 @@ jobs:
             # Set proper permissions
             sudo chown -R $USER:$USER prometheus
             # Pull latest changes
+            echo "Pulling latest changes..."
             git pull
-            # Debug: Check if port 8000 is still in use
-            echo "Checking if port 8000 is still in use..."
-            sudo lsof -i :8000 || true
-            # Additional port cleanup
-            sudo netstat -tulpn | grep :8000 || true
-            # Kill any remaining processes on port 8000
-            sudo kill -9 $(sudo lsof -t -i:8000) 2>/dev/null || true
-            # Build and start services with error handling
+            # Build and start services
             echo "Building Docker images..."
-            docker-compose build || { echo "Docker build failed"; exit 1; }
+            sudo docker-compose build || { echo "Docker build failed"; exit 1; }
             echo "Starting Docker containers..."
-            docker-compose up -d || { echo "Docker compose up failed"; exit 1; }
-            # Debug: Show running containers
-            echo "Checking running containers..."
-            docker ps
-            # Verify services are running
+            sudo docker-compose up -d || { echo "Docker compose up failed"; exit 1; }
+            # Verify services
             echo "Verifying services..."
-            docker-compose ps
-            # Check Docker logs
-            echo "Checking Docker logs..."
-            docker-compose logs 
+            sudo docker-compose ps
+            # Show logs
+            echo "Container logs:"
+            sudo docker-compose logs 
