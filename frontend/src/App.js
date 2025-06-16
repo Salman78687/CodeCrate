@@ -129,7 +129,7 @@ const languages = [
 ];
 
 // API configuration
-const API_URL = 'http://52.87.214.16:8000';
+const API_URL = 'http://52.87.214.16:8001';
 
 function App() {
   const [code, setCode] = useState(defaultCodeSnippets.py);
