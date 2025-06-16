@@ -41,7 +41,7 @@ SUPPORTED_LANGUAGES = {
 
 # Docker client configuration
 try:
-    client = docker.from_env(use_ssh_client=True)
+    client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     # Test the connection
     client.ping()
     logger.info("Successfully connected to Docker daemon")
