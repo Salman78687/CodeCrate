@@ -5,6 +5,8 @@ from executor import run_code, check_docker_availability, SUPPORTED_LANGUAGES
 import time
 import logging
 from typing import Optional, Dict, Any
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -101,7 +103,7 @@ async def get_supported_languages():
     }
 
 @app.post("/api/v1/execute", response_model=CodeResponse, tags=["Execution"])
-async def execute_code(request: CodeRequest):
+async def execute_code_endpoint(request: CodeRequest):
     """
     Execute code in an isolated Docker container.
     
@@ -128,11 +130,11 @@ async def execute_code(request: CodeRequest):
             detail="Docker service is not available"
         )
     
-    # Execute code
-    start_time = time.time()
-    try:
-        result = run_code(request.language, request.code)
-        execution_time = time.time() - start_time
+    # Use ThreadPoolExecutor to run the code execution with a timeout
+    with ThreadPoolExecutor() as executor:
+        # Set timeout to 2 minutes
+        future = executor.submit(run_code, request.language, request.code)
+        result = await asyncio.wrap_future(future)
         
         # Update metrics
         if "error" not in result:
@@ -145,25 +147,14 @@ async def execute_code(request: CodeRequest):
             "output": result.get("output"),
             "error": result.get("error"),
             "exitCode": result.get("exitCode", 0),
-            "executionTime": execution_time,
+            "executionTime": result.get("executionTime", 0),
             "stderr": result.get("stderr")
         }
         
         response = CodeResponse(**response_data)
         
-        logger.info(f"Execution completed in {execution_time:.2f}s with exit code: {response.exitCode}")
+        logger.info(f"Execution completed in {response.executionTime:.2f}s with exit code: {response.exitCode}")
         return response
-        
-    except Exception as e:
-        execution_time = time.time() - start_time
-        metrics["failed_executions"] += 1
-        logger.error(f"Execution failed: {str(e)}", exc_info=True)
-        
-        return CodeResponse(
-            error=f"Internal server error: {str(e)}",
-            exitCode=-1,
-            executionTime=execution_time
-        )
 
 @app.get("/api/v1/metrics", tags=["Monitoring"])
 async def get_metrics():
@@ -174,7 +165,7 @@ async def get_metrics():
 @app.post("/execute", response_model=CodeResponse, tags=["Execution"], deprecated=True)
 async def execute_code_legacy(request: CodeRequest):
     """Legacy endpoint - use /api/v1/execute instead."""
-    return await execute_code(request)
+    return await execute_code_endpoint(request)
 
 if __name__ == "__main__":
     import uvicorn
