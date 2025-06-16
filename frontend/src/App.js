@@ -129,7 +129,7 @@ const languages = [
 ];
 
 // API configuration
-const API_BASE_URL = 'http://52.205.155.47:8000';
+const API_URL = 'http://52.87.214.16:8000';
 
 function App() {
   const [code, setCode] = useState(defaultCodeSnippets.py);
@@ -144,7 +144,7 @@ function App() {
   useEffect(() => {
     const checkApiStatus = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/health`);
+        const response = await axios.get(`${API_URL}/health`);
         setApiStatus(response.data.status === 'healthy' ? 'available' : 'unhealthy');
       } catch (error) {
         setApiStatus('unavailable');
@@ -169,7 +169,7 @@ function App() {
     setIsError(false);
     setIsSuccess(false);
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/v1/execute`, {
+      const response = await axios.post(`${API_URL}/api/v1/execute`, {
         language,
         code
       }, {
