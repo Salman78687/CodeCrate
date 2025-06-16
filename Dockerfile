@@ -31,9 +31,10 @@ RUN mkdir -p /code
 
 # Create non-root user and add to docker group
 RUN useradd -m -u 1000 appuser && \
-    groupadd -g 113 docker && \
+    groupadd -g 113 docker || true && \
     usermod -aG docker appuser && \
-    chown -R appuser:appuser /app /code
+    chown -R appuser:appuser /app /code && \
+    chmod 666 /var/run/docker.sock || true
 
 # Switch to non-root user
 USER appuser
