@@ -26,6 +26,7 @@ jobs:
             # Stop Docker service
             echo "Stopping Docker service..."
             sudo systemctl stop docker
+            sudo systemctl stop docker.socket
             # Remove Docker socket if it exists
             echo "Removing Docker socket..."
             sudo rm -f /var/run/docker.sock
@@ -39,26 +40,31 @@ jobs:
               "log-opts": {
                 "max-size": "100m",
                 "max-file": "3"
-              }
+              },
+              "debug": true
             }
             EOF
             # Update Docker service configuration
             echo "Updating Docker service configuration..."
+            sudo mkdir -p /etc/systemd/system/docker.service.d
             sudo tee /etc/systemd/system/docker.service.d/override.conf << EOF
             [Service]
             ExecStart=
             ExecStart=/usr/bin/dockerd
             EOF
+            # Remove any existing socket configuration
+            sudo rm -f /etc/systemd/system/docker.socket
             # Reload systemd and restart Docker
             echo "Reloading systemd and restarting Docker..."
             sudo systemctl daemon-reload
             sudo systemctl start docker
             # Wait for Docker to be ready
             echo "Waiting for Docker to be ready..."
-            timeout=30
+            timeout=60
             while ! sudo docker info > /dev/null 2>&1; do
               if [ $timeout -le 0 ]; then
                 echo "Timeout waiting for Docker to start"
+                sudo journalctl -u docker --no-pager
                 exit 1
               fi
               timeout=$((timeout-1))
