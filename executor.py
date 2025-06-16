@@ -61,7 +61,7 @@ def ensure_image_exists(image_name: str) -> bool:
             logger.info(f"Image {image_name} not found locally, pulling...")
             client.images.pull(image_name)
             logger.info(f"Successfully pulled image {image_name}")
-        return True
+            return True
     except Exception as e:
         logger.error(f"Error ensuring image {image_name} exists: {str(e)}")
         return False
@@ -117,7 +117,7 @@ def run_code(language: str, code: str) -> Dict[str, Any]:
             return {"output": container.decode("utf-8")}
         except docker.errors.ContainerError as e:
             return {"error": e.stderr.decode("utf-8") if e.stderr else str(e)}
-    except Exception as e:
+        except Exception as e:
             return {"error": str(e)}
 
 # Health check function
@@ -127,4 +127,4 @@ def check_docker_availability() -> bool:
         result = client.version()
         return result["Version"] != ""
     except Exception:
-        return False
+        return False 
