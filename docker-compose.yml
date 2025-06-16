@@ -11,9 +11,11 @@ services:
       - "8001:8000"
     volumes:
       - ./:/app
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - DOCKER_TLS_VERIFY=0
+    privileged: true
     networks:
       - code-executor-network
 
