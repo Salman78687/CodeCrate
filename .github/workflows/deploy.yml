@@ -57,6 +57,10 @@ jobs:
             # Debug: Check if port 8000 is still in use
             echo "Checking if port 8000 is still in use..."
             sudo lsof -i :8000 || true
+            # Additional port cleanup
+            sudo netstat -tulpn | grep :8000 || true
+            # Kill any remaining processes on port 8000
+            sudo kill -9 $(sudo lsof -t -i:8000) 2>/dev/null || true
             # Build and start services
             docker-compose build
             docker-compose up -d
