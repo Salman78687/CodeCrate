@@ -121,10 +121,10 @@ const languageToMonacoLanguage = {
 };
 
 const languages = [
-  { id: 'py', name: 'Python' },
+  { id: 'python', name: 'Python' },
   { id: 'cpp', name: 'C++' },
   { id: 'java', name: 'Java' },
-  { id: 'js', name: 'JavaScript' },
+  { id: 'javascript', name: 'JavaScript' },
   { id: 'go', name: 'Go' }
 ];
 
