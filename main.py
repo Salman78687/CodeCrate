@@ -21,10 +21,10 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
-# Add CORS middleware for frontend integration
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify actual origins
+    allow_origins=["http://localhost:3000", "http://localhost:3000/CodeCrate"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
