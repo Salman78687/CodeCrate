@@ -19,12 +19,16 @@ jobs:
             git pull
             # Stop all running containers
             docker-compose down
+            # Kill any process using port 8000
+            sudo lsof -ti:8000 | xargs -r sudo kill -9
             # Remove all containers
             docker rm -f $(docker ps -aq) || true
             # Remove all networks
             docker network prune -f
             # Remove all volumes
             docker volume prune -f
+            # Create prometheus directory if it doesn't exist
+            mkdir -p prometheus
             # Build and start services
             docker-compose build
             docker-compose up -d 
