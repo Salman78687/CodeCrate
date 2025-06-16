@@ -90,6 +90,20 @@ const StyledFormControl = styled(FormControl)(({ theme }) => ({
   },
 }));
 
+const OutputBox = styled(Box)(({ theme, error, success }) => ({
+  marginTop: '1.5rem',
+  padding: '1rem',
+  backgroundColor: theme.palette.background.default,
+  border: `1px solid ${error ? '#ef4444' : success ? '#22c55e' : theme.palette.divider}`,
+  borderRadius: '0.5rem',
+  whiteSpace: 'pre-wrap',
+  fontFamily: '"JetBrains Mono", monospace',
+  fontSize: '0.9rem',
+  lineHeight: 1.6,
+  animation: error ? 'errorShake 0.5s ease-out' : success ? 'successPulse 0.5s ease-out' : 'fadeIn 0.3s ease-out',
+  color: error ? '#ef4444' : success ? '#22c55e' : theme.palette.text.primary,
+}));
+
 const defaultCodeSnippets = {
   py: '# Write your Python code here\nprint("Hello, World!")',
   cpp: '// Write your C++ code here\n#include <iostream>\n\nint main() {\n    std::cout << "Hello, World!" << std::endl;\n    return 0;\n}',

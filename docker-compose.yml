@@ -53,4 +53,4 @@ networks:
 
 volumes:
   prometheus-data:
-  grafana-storage: 
+  grafana-storage:
