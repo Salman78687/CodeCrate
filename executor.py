@@ -10,18 +10,8 @@ from typing import Dict, Any
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Docker client configuration
-try:
-    client = docker.from_env()
-    # Test the connection
-    client.ping()
-    logger.info("Successfully connected to Docker daemon")
-except Exception as e:
-    logger.error(f"Failed to connect to Docker daemon: {str(e)}")
-    client = None
-
 # Language configurations
-LANGUAGE_CONFIGS = {
+SUPPORTED_LANGUAGES = {
     "python": {
         "image": "python:3.9-slim",
         "command": ["python", "/app/code.py"],
@@ -48,6 +38,16 @@ LANGUAGE_CONFIGS = {
         "timeout": 30
     }
 }
+
+# Docker client configuration
+try:
+    client = docker.from_env(use_ssh_client=True)
+    # Test the connection
+    client.ping()
+    logger.info("Successfully connected to Docker daemon")
+except Exception as e:
+    logger.error(f"Failed to connect to Docker daemon: {str(e)}")
+    client = None
 
 # Resource limits
 RESOURCE_LIMITS = {
@@ -81,10 +81,10 @@ def run_code(language: str, code: str) -> Dict[str, Any]:
     if not client:
         return {"error": "Docker daemon is not available"}
         
-    if language not in LANGUAGE_CONFIGS:
+    if language not in SUPPORTED_LANGUAGES:
         return {"error": f"Unsupported language: {language}"}
     
-    config = LANGUAGE_CONFIGS[language]
+    config = SUPPORTED_LANGUAGES[language]
     
     # Ensure Docker image exists
     if not ensure_image_exists(config["image"]):
