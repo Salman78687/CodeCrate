@@ -16,10 +16,15 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/CodeCrate
+            # Debug: Show what's using port 8000
+            echo "Checking processes using port 8000..."
+            sudo lsof -i :8000 || true
             # Stop all running containers
             docker-compose down
-            # Kill any process using port 8000
-            sudo lsof -ti:8000 | xargs -r sudo kill -9
+            # Kill any process using port 8000 (more aggressive)
+            sudo fuser -k 8000/tcp || true
+            # Additional cleanup for Docker
+            docker system prune -f
             # Remove all containers
             docker rm -f $(docker ps -aq) || true
             # Remove all networks
@@ -49,6 +54,12 @@ jobs:
             sudo chown -R $USER:$USER prometheus
             # Pull latest changes
             git pull
+            # Debug: Check if port 8000 is still in use
+            echo "Checking if port 8000 is still in use..."
+            sudo lsof -i :8000 || true
             # Build and start services
             docker-compose build
-            docker-compose up -d 
+            docker-compose up -d
+            # Debug: Show running containers
+            echo "Checking running containers..."
+            docker ps 
