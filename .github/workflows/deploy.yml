@@ -16,7 +16,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/CodeCrate
-            git pull
             # Stop all running containers
             docker-compose down
             # Kill any process using port 8000
@@ -27,8 +26,29 @@ jobs:
             docker network prune -f
             # Remove all volumes
             docker volume prune -f
-            # Create prometheus directory if it doesn't exist
+            # Clean up prometheus directory
+            sudo rm -rf prometheus
             mkdir -p prometheus
+            # Create prometheus config
+            cat > prometheus/prometheus.yml << 'EOL'
+            global:
+              scrape_interval: 15s
+              evaluation_interval: 15s
+
+            scrape_configs:
+              - job_name: 'api'
+                static_configs:
+                  - targets: ['api:8000']
+                metrics_path: '/metrics'
+
+              - job_name: 'prometheus'
+                static_configs:
+                  - targets: ['localhost:9090']
+            EOL
+            # Set proper permissions
+            sudo chown -R $USER:$USER prometheus
+            # Pull latest changes
+            git pull
             # Build and start services
             docker-compose build
             docker-compose up -d 
