@@ -10,8 +10,15 @@ from typing import Dict, Any
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Docker client
-client = docker.from_env()
+# Docker client configuration
+try:
+    client = docker.from_env()
+    # Test the connection
+    client.ping()
+    logger.info("Successfully connected to Docker daemon")
+except Exception as e:
+    logger.error(f"Failed to connect to Docker daemon: {str(e)}")
+    client = None
 
 # Language configurations
 LANGUAGE_CONFIGS = {
@@ -51,6 +58,9 @@ RESOURCE_LIMITS = {
 
 def ensure_image_exists(image_name: str) -> bool:
     """Ensure Docker image exists, pull if necessary."""
+    if not client:
+        return False
+        
     try:
         # Check if image exists locally
         try:
@@ -68,6 +78,9 @@ def ensure_image_exists(image_name: str) -> bool:
 
 def run_code(language: str, code: str) -> Dict[str, Any]:
     """Execute code in an isolated Docker container."""
+    if not client:
+        return {"error": "Docker daemon is not available"}
+        
     if language not in LANGUAGE_CONFIGS:
         return {"error": f"Unsupported language: {language}"}
     
@@ -123,8 +136,10 @@ def run_code(language: str, code: str) -> Dict[str, Any]:
 # Health check function
 def check_docker_availability() -> bool:
     """Check if Docker daemon is accessible."""
+    if not client:
+        return False
     try:
-        result = client.version()
-        return result["Version"] != ""
+        client.ping()
+        return True
     except Exception:
         return False 
