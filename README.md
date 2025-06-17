@@ -1,16 +1,112 @@
-# Code Execution Platform
+# CodeCrate
 
-A secure online code execution platform (mini Replit) that runs code in isolated Docker containers. Built with FastAPI and demonstrates modern DevOps practices.
+A secure online code execution platform that allows users to write, compile, and run code in multiple programming languages in a safe, isolated environment.
 
-## 🚀 Features
+## Features
 
-- **Multi-language Support**: Python, C++, Java, JavaScript, Go
-- **Secure Execution**: Code runs in isolated Docker containers with resource limits
-- **RESTful API**: Well-documented API with Swagger/OpenAPI support
-- **Health Monitoring**: Built-in health checks and metrics
-- **Container Orchestration**: Docker Compose for easy deployment
-- **CI/CD Ready**: GitHub Actions workflow included
-- **Production Ready**: Nginx reverse proxy, monitoring with Prometheus/Grafana
+- **Multi-language Support**
+  - Python 3.9
+  - JavaScript (Node.js 18)
+  - Java 17
+  - C++ (GCC Latest)
+  - Go 1.20
+
+- **Secure Execution**
+  - Docker container isolation
+  - Resource limits (CPU, Memory)
+  - Network access disabled
+  - Timeout protection
+
+- **Modern UI**
+  - Syntax highlighting
+  - Real-time code execution
+  - Responsive design
+  - Dark mode support
+
+## Tech Stack
+
+### Backend
+- FastAPI (Python)
+- Docker for code isolation
+- Uvicorn ASGI server
+
+### Frontend
+- React
+- Monaco Editor (VS Code's editor)
+- Tailwind CSS
+- Material-UI
+
+## Prerequisites
+
+- Python 3.9+
+- Docker
+- Node.js 18+
+- npm or yarn
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/Salman78687/CodeCrate.git
+cd CodeCrate
+```
+
+2. Install backend dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Install frontend dependencies:
+```bash
+cd frontend
+npm install
+```
+
+4. Start the backend server:
+```bash
+uvicorn main:app --reload
+```
+
+5. Start the frontend development server:
+```bash
+cd frontend
+npm start
+```
+
+## Usage
+
+1. Open your browser and navigate to `http://localhost:3000`
+2. Select your preferred programming language
+3. Write your code in the editor
+4. Click "Run Code" to execute
+5. View the output in the results panel
+
+## Security Features
+
+- Code execution in isolated Docker containers
+- Resource limits to prevent abuse
+- Network access disabled for security
+- Timeout protection against infinite loops
+- Input validation and sanitization
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Monaco Editor for the code editor component
+- Docker for containerization
+- FastAPI for the backend framework
+- React and Material-UI for the frontend framework
 
 ## 🏗️ Architecture
 
