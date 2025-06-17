@@ -28,7 +28,7 @@ SUPPORTED_LANGUAGES = {
         "timeout": 30
     },
     "cpp": {
-        "image": "gcc:7.5",
+        "image": "gcc:latest",
         "command": ["bash", "-c", "echo '{code}' > /tmp/code.cpp && cd /tmp && g++ code.cpp -o code && ./code"],
         "timeout": 30
     },

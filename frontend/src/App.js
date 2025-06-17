@@ -204,102 +204,110 @@ function App() {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <StyledContainer maxWidth="lg">
-        <StyledPaper>
-          <Typography variant="h1" component="h1" gutterBottom>
-            ⚡ CodeCrate
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-            A secure online code execution platform
-          </Typography>
-          
-          <StyledFormControl fullWidth>
-            <InputLabel>Language</InputLabel>
-            <Select
-              value={language}
-              label="Language"
-              onChange={(e) => handleLanguageChange(e.target.value)}
-            >
-              {languages.map((lang) => (
-                <MenuItem key={lang.id} value={lang.id}>
-                  {lang.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </StyledFormControl>
-
-          <Box sx={{ height: '400px', mb: 2 }}>
-            <Editor
-              height="100%"
-              language={languageToMonacoLanguage[language]}
-              value={code}
-              onChange={(value) => setCode(value)}
-              theme="vs-dark"
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                fontFamily: '"JetBrains Mono", monospace',
-                lineHeight: 1.6,
-                automaticLayout: true,
-              }}
-            />
-          </Box>
-
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleExecute}
-            disabled={isLoading}
-            sx={{ mr: 2 }}
-          >
-            {isLoading ? 'Executing...' : 'Run Code'}
-          </Button>
-
-          <Box
-            sx={{
-              mt: 2,
-              p: 2,
-              bgcolor: 'background.paper',
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'divider',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2
-            }}
-            success={isSuccess ? "true" : undefined}
-            error={isError ? "true" : undefined}
-          >
-            {output || 'No output yet'}
-          </Box>
-
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h3" gutterBottom>
-              Statistics
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+          CodeCrate
+        </h1>
+        <p className="text-center text-gray-300 mb-12 text-lg">
+          A secure online code execution platform
+        </p>
+        <StyledContainer maxWidth="lg">
+          <StyledPaper>
+            <Typography variant="h1" component="h1" gutterBottom>
+              ⚡ CodeCrate
             </Typography>
-            <Box sx={{ 
-              p: 2, 
-              bgcolor: 'background.default', 
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'divider'
-            }}>
-              <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <span>Total Executions:</span>
-                <span>0</span>
-              </Typography>
-              <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <span>Success Rate:</span>
-                <span>0%</span>
-              </Typography>
-              <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Average Execution Time:</span>
-                <span>0ms</span>
-              </Typography>
+            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+              A secure online code execution platform
+            </Typography>
+            
+            <StyledFormControl fullWidth>
+              <InputLabel>Language</InputLabel>
+              <Select
+                value={language}
+                label="Language"
+                onChange={(e) => handleLanguageChange(e.target.value)}
+              >
+                {languages.map((lang) => (
+                  <MenuItem key={lang.id} value={lang.id}>
+                    {lang.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </StyledFormControl>
+
+            <Box sx={{ height: '400px', mb: 2 }}>
+              <Editor
+                height="100%"
+                language={languageToMonacoLanguage[language]}
+                value={code}
+                onChange={(value) => setCode(value)}
+                theme="vs-dark"
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  fontFamily: '"JetBrains Mono", monospace',
+                  lineHeight: 1.6,
+                  automaticLayout: true,
+                }}
+              />
             </Box>
-          </Box>
-        </StyledPaper>
-      </StyledContainer>
+
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleExecute}
+              disabled={isLoading}
+              sx={{ mr: 2 }}
+            >
+              {isLoading ? 'Executing...' : 'Run Code'}
+            </Button>
+
+            <Box
+              sx={{
+                mt: 2,
+                p: 2,
+                bgcolor: 'background.paper',
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2
+              }}
+              success={isSuccess ? "true" : undefined}
+              error={isError ? "true" : undefined}
+            >
+              {output || 'No output yet'}
+            </Box>
+
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h3" gutterBottom>
+                Statistics
+              </Typography>
+              <Box sx={{ 
+                p: 2, 
+                bgcolor: 'background.default', 
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'divider'
+              }}>
+                <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <span>Total Executions:</span>
+                  <span>0</span>
+                </Typography>
+                <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <span>Success Rate:</span>
+                  <span>0%</span>
+                </Typography>
+                <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Average Execution Time:</span>
+                  <span>0ms</span>
+                </Typography>
+              </Box>
+            </Box>
+          </StyledPaper>
+        </StyledContainer>
+      </div>
       <ToastContainer 
         position="bottom-right"
         theme="dark"
