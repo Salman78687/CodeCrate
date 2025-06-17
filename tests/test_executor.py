@@ -61,7 +61,7 @@ def test_go_execution():
 
 def test_invalid_language():
     """Test execution with invalid language."""
-    with patch('codecrate.executor.executor.run_code') as mock_run:
+    with patch('codecrate.executor.run_code') as mock_run:
         mock_run.return_value = {"exitCode": -1, "error": "Unsupported language: invalid"}
         result = run_code("invalid", "print('test')")
         assert result["exitCode"] == -1
@@ -69,7 +69,7 @@ def test_invalid_language():
 
 def test_timeout():
     """Test code execution timeout."""
-    with patch('codecrate.executor.executor.run_code') as mock_run:
+    with patch('codecrate.executor.run_code') as mock_run:
         mock_run.return_value = {"exitCode": -1, "error": "Container timed out"}
         code = "import time; time.sleep(40)"  # Should timeout after 30 seconds
         result = run_code("python", code)
