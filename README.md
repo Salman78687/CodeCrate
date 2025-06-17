@@ -248,15 +248,7 @@ docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 3. Clone repository
 4. Run `docker-compose up -d`
 
-### Kubernetes Deployment
 
-```bash
-# Apply manifests
-kubectl apply -f k8s/
-
-# Check deployment
-kubectl get pods -n code-executor
-```
 
 ## 🗺️ Roadmap
 
@@ -265,8 +257,7 @@ kubectl get pods -n code-executor
 - [ ] Code persistence
 - [ ] Multi-file support
 - [ ] Real-time output streaming
-- [ ] Kubernetes Helm charts
-- [ ] Terraform modules
+
 
 ## 🤝 Contributing
 
