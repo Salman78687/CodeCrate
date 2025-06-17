@@ -138,7 +138,9 @@ class CodeExecutor:
 # Create a singleton instance
 executor = CodeExecutor()
 
-# Export functions for backward compatibility
+# Export functions and classes for backward compatibility
+__all__ = ['CodeExecutor', 'run_code', 'check_docker_availability', 'SUPPORTED_LANGUAGES']
+
 def run_code(language: str, code: str) -> Dict[str, Any]:
     return executor.run_code(language, code)
 
