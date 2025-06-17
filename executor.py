@@ -14,27 +14,27 @@ logger = logging.getLogger(__name__)
 SUPPORTED_LANGUAGES = {
     "python": {
         "image": "python:3.9-slim",
-        "command": ["python", "/app/code.py"],
+        "command": ["bash", "-c", "echo '{code}' > /tmp/code.py && python /tmp/code.py"],
         "timeout": 30
     },
     "javascript": {
         "image": "node:18-slim",
-        "command": ["node", "/app/code.js"],
+        "command": ["bash", "-c", "echo '{code}' > /tmp/code.js && node /tmp/code.js"],
         "timeout": 30
     },
     "java": {
         "image": "openjdk:17-slim",
-        "command": ["java", "-cp", "/app", "Main"],
+        "command": ["bash", "-c", "echo '{code}' > /tmp/Main.java && cd /tmp && javac Main.java && java Main"],
         "timeout": 30
     },
     "cpp": {
-        "image": "gcc:8.5",
-        "command": ["bash", "-c", "g++ /app/code.cpp -o /app/a.out && /app/a.out"],
+        "image": "gcc:7.5",
+        "command": ["bash", "-c", "echo '{code}' > /tmp/code.cpp && cd /tmp && g++ code.cpp -o code && ./code"],
         "timeout": 30
     },
     "go": {
-        "image": "golang:1.21-alpine",
-        "command": ["./main"],
+        "image": "golang:1.20",
+        "command": ["bash", "-c", "echo '{code}' > /tmp/main.go && cd /tmp && go run main.go"],
         "timeout": 30
     }
 }
@@ -96,48 +96,23 @@ def run_code(language: str, code: str) -> Dict[str, Any]:
     if not ensure_image_exists(config["image"]):
         return {"error": f"Failed to pull Docker image: {config['image']}"}
 
-    # Create temporary directory for code
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # Write code to file
-        if language == "java":
-            file_path = os.path.join(temp_dir, "Main.java")
-            with open(file_path, "w") as f:
-                f.write(code)
-        elif language == "cpp":
-            file_path = os.path.join(temp_dir, "code.cpp")
-            with open(file_path, "w") as f:
-                f.write(code)
-        elif language == "go":
-            file_path = os.path.join(temp_dir, "main.go")
-            with open(file_path, "w") as f:
-                f.write(code)
-        else:
-            file_path = os.path.join(temp_dir, f"code.{language}")
-            with open(file_path, "w") as f:
-                f.write(code)
+    # Prepare container configuration
+    container_config = {
+        "image": config["image"],
+        "command": [cmd.replace("{code}", code) for cmd in config["command"]],
+        "mem_limit": "512m",
+        "cpu_period": 100000,
+        "cpu_quota": 50000,
+        "network_disabled": True,
+        "remove": True
+    }
 
-        # Prepare container configuration
-        container_config = {
-            "image": config["image"],
-            "command": config["command"],
-            "volumes": {
-                temp_dir: {"bind": "/app", "mode": "ro"}
-            },
-            "mem_limit": "512m",
-            "cpu_period": 100000,
-            "cpu_quota": 50000,
-            "network_disabled": True,
-            "remove": True
-        }
-
-        try:
-            # Create and run container
-            container = client.containers.run(**container_config)
-            return {"output": container.decode("utf-8")}
-        except docker.errors.ContainerError as e:
-            return {"error": e.stderr.decode("utf-8") if e.stderr else str(e)}
-        except Exception as e:
-            return {"error": str(e)}
+    try:
+        # Run container
+        container = client.containers.run(**container_config)
+        return {"output": container.decode('utf-8')}
+    except Exception as e:
+        return {"error": str(e)}
 
 # Health check function
 def check_docker_availability() -> bool:
