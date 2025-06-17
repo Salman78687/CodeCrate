@@ -1,7 +1,7 @@
 import os
 import sys
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -12,6 +12,12 @@ def mock_executor_functions():
     with patch('codecrate.executor.run_code') as mock_run_code, \
          patch('codecrate.executor.check_docker_availability') as mock_check_docker:
         # Configure default mock responses
-        mock_run_code.return_value = {"exitCode": 0, "output": "Test output"}
+        mock_run_code.return_value = {
+            "exitCode": 0,
+            "output": "Test output",
+            "error": None,
+            "executionTime": 0.1,
+            "stderr": None
+        }
         mock_check_docker.return_value = True
         yield 
