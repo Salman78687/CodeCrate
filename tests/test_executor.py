@@ -8,7 +8,7 @@ def test_docker_availability():
 def test_python_execution():
     """Test Python code execution."""
     code = "print('Hello, World!')"
-    result = run_code("py", code)
+    result = run_code("python", code)
     assert result["exitCode"] == 0
     assert "Hello, World!" in result["output"]
 
@@ -41,7 +41,7 @@ def test_java_execution():
 def test_js_execution():
     """Test JavaScript code execution."""
     code = "console.log('Hello from JavaScript!')"
-    result = run_code("js", code)
+    result = run_code("javascript", code)
     assert result["exitCode"] == 0
     assert "Hello from JavaScript!" in result["output"]
 
@@ -67,6 +67,6 @@ def test_invalid_language():
 def test_timeout():
     """Test code execution timeout."""
     code = "import time; time.sleep(40)"  # Should timeout after 30 seconds
-    result = run_code("py", code)
+    result = run_code("python", code)
     assert result["exitCode"] == -1
     assert "timed out" in result["error"] 

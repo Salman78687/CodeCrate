@@ -85,16 +85,16 @@ def ensure_image_exists(image_name: str) -> bool:
 def run_code(language: str, code: str) -> Dict[str, Any]:
     """Execute code in an isolated Docker container."""
     if not client:
-        return {"error": "Docker daemon is not available"}
+        return {"exitCode": -1, "error": "Docker daemon is not available"}
         
     if language not in SUPPORTED_LANGUAGES:
-        return {"error": f"Unsupported language: {language}"}
+        return {"exitCode": -1, "error": f"Unsupported language: {language}"}
     
     config = SUPPORTED_LANGUAGES[language]
     
     # Ensure Docker image exists
     if not ensure_image_exists(config["image"]):
-        return {"error": f"Failed to pull Docker image: {config['image']}"}
+        return {"exitCode": -1, "error": f"Failed to pull Docker image: {config['image']}"}
 
     # Prepare container configuration
     container_config = {
@@ -110,9 +110,13 @@ def run_code(language: str, code: str) -> Dict[str, Any]:
     try:
         # Run container
         container = client.containers.run(**container_config)
-        return {"output": container.decode('utf-8')}
+        return {"exitCode": 0, "output": container.decode('utf-8')}
+    except docker.errors.ContainerError as e:
+        return {"exitCode": e.exit_status, "error": str(e)}
+    except docker.errors.APIError as e:
+        return {"exitCode": -1, "error": str(e)}
     except Exception as e:
-        return {"error": str(e)}
+        return {"exitCode": -1, "error": str(e)}
 
 # Health check function
 def check_docker_availability() -> bool:
