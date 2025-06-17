@@ -46,91 +46,101 @@ RESOURCE_LIMITS = {
     "timeout": 30,     # Increased timeout
 }
 
-def get_docker_client() -> Optional[docker.DockerClient]:
-    """Get Docker client instance."""
-    try:
-        # Try TCP first, fall back to socket
+class CodeExecutor:
+    def __init__(self):
+        self.client = self._get_docker_client()
+
+    def _get_docker_client(self) -> Optional[docker.DockerClient]:
+        """Get Docker client instance."""
         try:
-            client = docker.DockerClient(base_url='tcp://host.docker.internal:2375')
-            client.ping()
-            logger.info("Successfully connected to Docker daemon via TCP")
-            return client
-        except Exception as tcp_error:
-            logger.warning(f"TCP connection failed: {str(tcp_error)}, trying socket...")
-            client = docker.DockerClient(base_url='unix://var/run/docker.sock')
-            client.ping()
-            logger.info("Successfully connected to Docker daemon via socket")
-            return client
-    except Exception as e:
-        logger.error(f"Failed to connect to Docker daemon: {str(e)}")
-        return None
+            # Try TCP first, fall back to socket
+            try:
+                client = docker.DockerClient(base_url='tcp://host.docker.internal:2375')
+                client.ping()
+                logger.info("Successfully connected to Docker daemon via TCP")
+                return client
+            except Exception as tcp_error:
+                logger.warning(f"TCP connection failed: {str(tcp_error)}, trying socket...")
+                client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+                client.ping()
+                logger.info("Successfully connected to Docker daemon via socket")
+                return client
+        except Exception as e:
+            logger.error(f"Failed to connect to Docker daemon: {str(e)}")
+            return None
 
-# Initialize Docker client
-client = get_docker_client()
+    def ensure_image_exists(self, image_name: str) -> bool:
+        """Ensure Docker image exists, pull if necessary."""
+        if not self.client:
+            return False
+            
+        try:
+            # Check if image exists locally
+            try:
+                self.client.images.get(image_name)
+                logger.info(f"Image {image_name} exists locally")
+                return True
+            except docker.errors.ImageNotFound:
+                logger.info(f"Image {image_name} not found locally, pulling...")
+                self.client.images.pull(image_name)
+                logger.info(f"Successfully pulled image {image_name}")
+                return True
+        except Exception as e:
+            logger.error(f"Error ensuring image {image_name} exists: {str(e)}")
+            return False
 
-def ensure_image_exists(image_name: str) -> bool:
-    """Ensure Docker image exists, pull if necessary."""
-    if not client:
-        return False
+    def run_code(self, language: str, code: str) -> Dict[str, Any]:
+        """Execute code in an isolated Docker container."""
+        if not self.client:
+            return {"exitCode": -1, "error": "Docker daemon is not available"}
+            
+        if language not in SUPPORTED_LANGUAGES:
+            return {"exitCode": -1, "error": f"Unsupported language: {language}"}
         
-    try:
-        # Check if image exists locally
-        try:
-            client.images.get(image_name)
-            logger.info(f"Image {image_name} exists locally")
-            return True
-        except docker.errors.ImageNotFound:
-            logger.info(f"Image {image_name} not found locally, pulling...")
-            client.images.pull(image_name)
-            logger.info(f"Successfully pulled image {image_name}")
-            return True
-    except Exception as e:
-        logger.error(f"Error ensuring image {image_name} exists: {str(e)}")
-        return False
+        config = SUPPORTED_LANGUAGES[language]
+        
+        # Ensure Docker image exists
+        if not self.ensure_image_exists(config["image"]):
+            return {"exitCode": -1, "error": f"Failed to pull Docker image: {config['image']}"}
 
+        # Prepare container configuration
+        container_config = {
+            "image": config["image"],
+            "command": [cmd.replace("{code}", code) for cmd in config["command"]],
+            "mem_limit": "512m",
+            "cpu_period": 100000,
+            "cpu_quota": 50000,
+            "network_disabled": True,
+            "remove": True
+        }
+
+        try:
+            # Run container
+            container = self.client.containers.run(**container_config)
+            return {"exitCode": 0, "output": container.decode('utf-8')}
+        except docker.errors.ContainerError as e:
+            return {"exitCode": e.exit_status, "error": str(e)}
+        except docker.errors.APIError as e:
+            return {"exitCode": -1, "error": str(e)}
+        except Exception as e:
+            return {"exitCode": -1, "error": str(e)}
+
+    def check_availability(self) -> bool:
+        """Check if Docker daemon is accessible."""
+        if not self.client:
+            return False
+        try:
+            self.client.ping()
+            return True
+        except Exception:
+            return False
+
+# Create a singleton instance
+executor = CodeExecutor()
+
+# Export functions for backward compatibility
 def run_code(language: str, code: str) -> Dict[str, Any]:
-    """Execute code in an isolated Docker container."""
-    if not client:
-        return {"exitCode": -1, "error": "Docker daemon is not available"}
-        
-    if language not in SUPPORTED_LANGUAGES:
-        return {"exitCode": -1, "error": f"Unsupported language: {language}"}
-    
-    config = SUPPORTED_LANGUAGES[language]
-    
-    # Ensure Docker image exists
-    if not ensure_image_exists(config["image"]):
-        return {"exitCode": -1, "error": f"Failed to pull Docker image: {config['image']}"}
+    return executor.run_code(language, code)
 
-    # Prepare container configuration
-    container_config = {
-        "image": config["image"],
-        "command": [cmd.replace("{code}", code) for cmd in config["command"]],
-        "mem_limit": "512m",
-        "cpu_period": 100000,
-        "cpu_quota": 50000,
-        "network_disabled": True,
-        "remove": True
-    }
-
-    try:
-        # Run container
-        container = client.containers.run(**container_config)
-        return {"exitCode": 0, "output": container.decode('utf-8')}
-    except docker.errors.ContainerError as e:
-        return {"exitCode": e.exit_status, "error": str(e)}
-    except docker.errors.APIError as e:
-        return {"exitCode": -1, "error": str(e)}
-    except Exception as e:
-        return {"exitCode": -1, "error": str(e)}
-
-# Health check function
 def check_docker_availability() -> bool:
-    """Check if Docker daemon is accessible."""
-    if not client:
-        return False
-    try:
-        client.ping()
-        return True
-    except Exception:
-        return False 
+    return executor.check_availability() 
