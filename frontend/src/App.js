@@ -160,45 +160,30 @@ function App() {
   };
 
   const handleExecute = async () => {
-    if (apiStatus !== 'available') {
-      toast.error('API is not available. Please check your connection.');
-      return;
-    }
-
     setIsLoading(true);
     setIsError(false);
     setIsSuccess(false);
+    setOutput('');
+
     try {
       const response = await axios.post(`${API_URL}/api/v1/execute`, {
         language,
         code
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        timeout: 120000  // Increased timeout to 2 minutes
       });
-
+      
       if (response.data.error) {
-        setOutput(response.data.error);
         setIsError(true);
-        toast.error('Error executing code');
+        setOutput(response.data.error);
       } else {
-        setOutput(response.data.output || '');
         setIsSuccess(true);
-        toast.success('Code executed successfully!');
+        setOutput(response.data.output || '');
       }
     } catch (error) {
-      console.error('Execution error:', error);
-      const errorMessage = error.response?.data?.detail || 
-                          error.message || 
-                          'Failed to execute code. Please check if the backend server is running.';
-      setOutput(errorMessage);
       setIsError(true);
-      toast.error('Error executing code');
+      setOutput(error.response?.data?.detail || error.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
