@@ -105,18 +105,18 @@ const OutputBox = styled(Box)(({ theme, error, success }) => ({
 }));
 
 const defaultCodeSnippets = {
-  py: '# Write your Python code here\nprint("Hello, World!")',
+  python: '# Write your Python code here\nprint("Hello, World!")',
   cpp: '// Write your C++ code here\n#include <iostream>\n\nint main() {\n    std::cout << "Hello, World!" << std::endl;\n    return 0;\n}',
   java: '// Write your Java code here\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
-  js: '// Write your JavaScript code here\nconsole.log("Hello, World!");',
+  javascript: '// Write your JavaScript code here\nconsole.log("Hello, World!");',
   go: '// Write your Go code here\npackage main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello, World!")\n}'
 };
 
 const languageToMonacoLanguage = {
-  py: 'python',
+  python: 'python',
   cpp: 'cpp',
   java: 'java',
-  js: 'javascript',
+  javascript: 'javascript',
   go: 'go'
 };
 
@@ -132,8 +132,8 @@ const languages = [
 const API_URL = 'http://52.87.214.16:8001';
 
 function App() {
-  const [code, setCode] = useState(defaultCodeSnippets.py);
-  const [language, setLanguage] = useState('py');
+  const [code, setCode] = useState(defaultCodeSnippets.python);
+  const [language, setLanguage] = useState('python');
   const [output, setOutput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -160,6 +160,12 @@ function App() {
   };
 
   const handleExecute = async () => {
+    if (apiStatus !== 'available') {
+      setOutput('API is not available. Please check your connection.');
+      setIsError(true);
+      return;
+    }
+
     setIsLoading(true);
     setIsError(false);
     setIsSuccess(false);
@@ -169,18 +175,27 @@ function App() {
       const response = await axios.post(`${API_URL}/api/v1/execute`, {
         language,
         code
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        timeout: 120000  // 2 minutes timeout
       });
       
       if (response.data.error) {
         setIsError(true);
-        setOutput(response.data.error);
+        setOutput(typeof response.data.error === 'string' ? response.data.error : JSON.stringify(response.data.error));
       } else {
         setIsSuccess(true);
         setOutput(response.data.output || '');
       }
     } catch (error) {
       setIsError(true);
-      setOutput(error.response?.data?.detail || error.message || 'An error occurred');
+      const errorMessage = error.response?.data?.detail || 
+                          (typeof error.response?.data === 'object' ? JSON.stringify(error.response.data) : error.message) || 
+                          'An error occurred';
+      setOutput(errorMessage);
     } finally {
       setIsLoading(false);
     }
