@@ -4,7 +4,7 @@ import tempfile
 import logging
 import json
 import base64
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -39,28 +39,34 @@ SUPPORTED_LANGUAGES = {
     }
 }
 
-# Docker client configuration
-try:
-    # Try TCP first, fall back to socket
-    try:
-        client = docker.DockerClient(base_url='tcp://host.docker.internal:2375')
-        client.ping()
-        logger.info("Successfully connected to Docker daemon via TCP")
-    except Exception as tcp_error:
-        logger.warning(f"TCP connection failed: {str(tcp_error)}, trying socket...")
-        client = docker.DockerClient(base_url='unix://var/run/docker.sock')
-        client.ping()
-        logger.info("Successfully connected to Docker daemon via socket")
-except Exception as e:
-    logger.error(f"Failed to connect to Docker daemon: {str(e)}")
-    client = None
-
 # Resource limits
 RESOURCE_LIMITS = {
     "memory": "256m",  # Increased for compilation
     "cpus": "1.0",     # Increased for faster compilation
     "timeout": 30,     # Increased timeout
 }
+
+def get_docker_client() -> Optional[docker.DockerClient]:
+    """Get Docker client instance."""
+    try:
+        # Try TCP first, fall back to socket
+        try:
+            client = docker.DockerClient(base_url='tcp://host.docker.internal:2375')
+            client.ping()
+            logger.info("Successfully connected to Docker daemon via TCP")
+            return client
+        except Exception as tcp_error:
+            logger.warning(f"TCP connection failed: {str(tcp_error)}, trying socket...")
+            client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+            client.ping()
+            logger.info("Successfully connected to Docker daemon via socket")
+            return client
+    except Exception as e:
+        logger.error(f"Failed to connect to Docker daemon: {str(e)}")
+        return None
+
+# Initialize Docker client
+client = get_docker_client()
 
 def ensure_image_exists(image_name: str) -> bool:
     """Ensure Docker image exists, pull if necessary."""
