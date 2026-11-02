@@ -111,7 +111,9 @@ class CodeExecutor:
             client.images.get(image)
             return True
         except ImageNotFound:
-            local = next((c for c in LANGUAGES.values() if c["image"] == image and "build_context" in c), None)
+            local = next(
+                (c for c in LANGUAGES.values() if c["image"] == image and "build_context" in c), None
+            )
             if local:
                 logger.error(
                     "Image %s is missing: build it with `docker build -t %s %s` "
