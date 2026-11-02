@@ -3,7 +3,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Container, Box, Paper, Typography, Button, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import Editor from '@monaco-editor/react';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import { styled } from '@mui/material/styles';
@@ -90,7 +90,9 @@ const StyledFormControl = styled(FormControl)(({ theme }) => ({
   },
 }));
 
-const OutputBox = styled(Box)(({ theme, error, success }) => ({
+const OutputBox = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'error' && prop !== 'success',
+})(({ theme, error, success }) => ({
   marginTop: '1.5rem',
   padding: '1rem',
   backgroundColor: theme.palette.background.default,
@@ -128,8 +130,11 @@ const languages = [
   { id: 'go', name: 'Go' }
 ];
 
-// API configuration
-const API_URL = 'http://your-server:8001';
+// Where the backend is. Empty means "same origin": nginx (Docker) or the
+// dev-server proxy in package.json forwards /api to the backend.
+const API_URL = (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
+
+const emptyStats = { total_executions: 0, successful_executions: 0, average_execution_time: 0 };
 
 function App() {
   const [code, setCode] = useState(defaultCodeSnippets.python);
@@ -139,19 +144,35 @@ function App() {
   const [isError, setIsError] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [apiStatus, setApiStatus] = useState('checking');
+  const [stats, setStats] = useState(emptyStats);
 
-  // Check API availability on component mount
+  const loadStats = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/v1/metrics`);
+      setStats(response.data);
+    } catch (error) {
+      console.error('Could not load statistics:', error);
+    }
+  };
+
+  const checkApiStatus = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/v1/health`);
+      const healthy = response.data.status === 'healthy';
+      setApiStatus(healthy ? 'available' : 'unhealthy');
+      return healthy;
+    } catch (error) {
+      setApiStatus('unavailable');
+      console.error('API health check failed:', error);
+      return false;
+    }
+  };
+
+  // Check API availability and load statistics on mount
   useEffect(() => {
-    const checkApiStatus = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/health`);
-        setApiStatus(response.data.status === 'healthy' ? 'available' : 'unhealthy');
-      } catch (error) {
-        setApiStatus('unavailable');
-        console.error('API health check failed:', error);
-      }
-    };
     checkApiStatus();
+    loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLanguageChange = (newLanguage) => {
@@ -160,8 +181,8 @@ function App() {
   };
 
   const handleExecute = async () => {
-    if (apiStatus !== 'available') {
-      setOutput('API is not available. Please check your connection.');
+    if (apiStatus !== 'available' && !(await checkApiStatus())) {
+      setOutput('The API is not available. Check that the backend is running and can reach Docker.');
       setIsError(true);
       return;
     }
@@ -183,13 +204,12 @@ function App() {
         timeout: 120000  // 2 minutes timeout
       });
       
-      if (response.data.error) {
-        setIsError(true);
-        setOutput(typeof response.data.error === 'string' ? response.data.error : JSON.stringify(response.data.error));
-      } else {
-        setIsSuccess(true);
-        setOutput(response.data.output || '');
-      }
+      const { output: stdout, stderr, error, exitCode } = response.data;
+      const parts = [stdout, stderr, error].filter(Boolean);
+      const ok = exitCode === 0 && !error;
+      setIsSuccess(ok);
+      setIsError(!ok);
+      setOutput(parts.join('\n') || `(no output, exit code ${exitCode})`);
     } catch (error) {
       setIsError(true);
       const errorMessage = error.response?.data?.detail || 
@@ -198,26 +218,21 @@ function App() {
       setOutput(errorMessage);
     } finally {
       setIsLoading(false);
+      loadStats();
     }
   };
 
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-          CodeCrate
-        </h1>
-        <p className="text-center text-gray-300 mb-12 text-lg">
-          A secure online code execution platform
-        </p>
+      <div>
         <StyledContainer maxWidth="lg">
           <StyledPaper>
             <Typography variant="h1" component="h1" gutterBottom>
               ⚡ CodeCrate
             </Typography>
             <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-              A secure online code execution platform
+              Run code in isolated, resource-limited Docker containers
             </Typography>
             
             <StyledFormControl fullWidth>
@@ -262,23 +277,9 @@ function App() {
               {isLoading ? 'Executing...' : 'Run Code'}
             </Button>
 
-            <Box
-              sx={{
-                mt: 2,
-                p: 2,
-                bgcolor: 'background.paper',
-                borderRadius: 1,
-                border: '1px solid',
-                borderColor: 'divider',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2
-              }}
-              success={isSuccess ? "true" : undefined}
-              error={isError ? "true" : undefined}
-            >
+            <OutputBox success={isSuccess} error={isError}>
               {output || 'No output yet'}
-            </Box>
+            </OutputBox>
 
             <Box sx={{ mt: 4 }}>
               <Typography variant="h3" gutterBottom>
@@ -293,15 +294,19 @@ function App() {
               }}>
                 <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                   <span>Total Executions:</span>
-                  <span>0</span>
+                  <span>{stats.total_executions}</span>
                 </Typography>
                 <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                   <span>Success Rate:</span>
-                  <span>0%</span>
+                  <span>
+                    {stats.total_executions
+                      ? Math.round((stats.successful_executions / stats.total_executions) * 100)
+                      : 0}%
+                  </span>
                 </Typography>
                 <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Average Execution Time:</span>
-                  <span>0ms</span>
+                  <span>{Math.round(stats.average_execution_time * 1000)}ms</span>
                 </Typography>
               </Box>
             </Box>
