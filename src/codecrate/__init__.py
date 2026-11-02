@@ -1,9 +1,3 @@
-"""
-CodeCrate - A secure online code execution platform
-"""
+"""CodeCrate: run code in many languages inside locked-down Docker containers."""
 
-__version__ = "0.1.0"
-
-from .executor import run_code, check_docker_availability
- 
-__all__ = ['run_code', 'check_docker_availability'] 
+__version__ = "0.2.0"
